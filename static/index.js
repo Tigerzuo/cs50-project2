@@ -1,4 +1,4 @@
-var socket = io.connect('/');
+var socket = io.connect('/',{secure: true});
 
 socket.on('connect', function () {
     var form = $('form.new_message').on('submit', function (e) {
