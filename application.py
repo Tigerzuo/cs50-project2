@@ -54,14 +54,17 @@ def login():
 @login_required
 def index(channel):
     if request.method == 'GET':
-        session["channel"] = channel
+        session['channel'] = channel
     return render_template("index.html", name=session["username"], channels=channels, channel=channels[channel], channel_name=channel)
 
-
 @app.route("/add_channel", methods=['POST'])
+@login_required
 def add_channel():
     global channels
     channel = request.form.get('channel')
+    if channel in channels:
+        return redirect("/index/" + channel)
+    session['channel'] = channel
     channels[channel] = []
     channel = "/index/" + channel
     print(channel)
@@ -72,24 +75,20 @@ def logout():
     session.clear()
     return redirect("/")
 
-
 def messageReceived(methods=['GET', 'POST']):
     print('message was received!!!')
-
 
 @socketio.on('my event')
 def handle_my_custom_event(json, methods=['GET', 'POST']):
     print('received my event: ' + str(json))
-    socketio.emit('my response', json, callback=messageReceived)
+    socketio.emit('my response', { "username": session["username"], "message": json["message"] }, callback=messageReceived)
 
 @socketio.on('new message')
 def handle_my_custom_event(json, methods=['GET', 'POST']):
     global channels
     msg = str(json)
     print('received new message: ' + msg)
-    channels["Default"].append((json["user_name"],json["message"]))
-    print(channels["Default"])
-
+    channels[session['channel']].append((session["username"],json["message"]))
 
 
 
