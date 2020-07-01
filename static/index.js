@@ -1,4 +1,4 @@
-var socket = io.connect('/',{secure: true});
+var socket = io.connect("https://cs50-flask-messenger.herokuapp.com",{secure: true});
 
 socket.on('connect', function () {
     var form = $('form.new_message').on('submit', function (e) {
