@@ -62,6 +62,8 @@ def index(channel):
 def add_channel():
     global channels
     channel = request.form.get('channel')
+    if len(channel) == 0:
+        return redirect("/index/" + session['channel'])
     if channel in channels:
         return redirect("/index/" + channel)
     session['channel'] = channel
