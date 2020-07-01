@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+
+{% block head %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+<script type="text/javascript">
+  var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+  socket.on('connect', function () {
+    socket.emit('my event', {
+      data: 'User Connected'
+    })
+    var form = $('form.new_message').on('submit', function (e) {
+      e.preventDefault()
+      let user_name = $('input.username').val()
+      let user_input = $('input.message').val()
+      socket.emit('my event', {
+        user_name: user_name,
+        message: user_input
+      })
+      socket.emit('new message', {
+        user_name: user_name,
+        message: user_input
+      })
+      $('input.message').val('').focus()
+    })
+  })
+  socket.on('my response', function (msg) {
+    console.log(msg)
+    if (typeof msg.user_name !== 'undefined') {
+      $('h3').remove()
+      $('div.message_holder').append('<div><b style="color: #000">' + msg.user_name + '</b> ' + msg.message + '</div>')
+    }
+  })
+
+</script>
+{% endblock %}
+
+{% block title %}
+User
+{% endblock %}
+
+{% block body %}
+<h1>Hello {{ name }}!</h1>
+<form action="{{ url_for('add_channel') }}" method="POST">
+  <input type="text" name="channel" placeholder="Enter channel">
+  <button>Add channel</button>
+</form>
+<div class="row">
+  <div class="col-sm-2">
+    <ol>
+      {% for channel in channels %}
+      <a href="{{ url_for('index', channel=channel) }}">
+        <li>{{ channel }}</li>
+      </a>
+      {% endfor %}
+    </ol>
+  </div>
+  <div class="col-sm-10">
+    {% for chat in channel %}
+    <div><b style="color: #000">{{ chat[0] }}: </b>{{ chat[1] }}</div>
+    {% endfor %}
+
+    <h3 style='color: #ccc;font-size: 30px;'>No new messages yet..</h3>
+    <div class="message_holder"></div>
+
+    <form action="" class="new_message" method="POST">
+      <input type="text" class="username" placeholder="User Name" />
+      <input type="text" class="message" placeholder="Messages" />
+      <input type="submit" />
+    </form>
+
+  </div>
+
+</div>
+{% endblock %}
