@@ -13,6 +13,7 @@ socketio = SocketIO(app)
 
 channels = {"Default":[]}
 
+#Page requires login
 def login_required(f):
     """
     Decorate routes to require login.
@@ -21,10 +22,11 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if session.get("username") is None:
-            return redirect("/")
+            return redirect("/login")
         return f(*args, **kwargs)
     return decorated_function
 
+#Redirect if users are already logged in
 def check_login(f):
     """
     Decorate routes to require login.
@@ -33,22 +35,30 @@ def check_login(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if session.get("user_id") is not None:  
-            return redirect("/index")
+            return redirect(f"/index/{session['channel']}")
+        # Create default channel    
+        session['channel'] = "Default"
         return f(*args, **kwargs)
     return decorated_function
 
-
-@app.route("/", methods=['GET','POST'])
+@app.route("/login", methods=['GET','POST'])
 @check_login
 def login():
     if request.method == 'POST':
         name = request.form.get("username")
-        session['username'] = name
-        if session.get("channel") is None:
-            session['channel'] = "Default"
-        return redirect(f"/index/{session['channel']}")
-    return render_template("login.html")
+        if len(name) > 2:
+            session['username'] = name
+            return redirect(f"/index/{session['channel']}")
+        else:
+            print("name tooo shortttt")
+            return render_template("login.html", Name_too_short=True)
+    return render_template("login.html", Name_too_short=False)
 
+#Main page
+@app.route("/", methods=['GET','POST'])
+@login_required
+def main():
+    return redirect(f"/index/{session['channel']}")
 
 @app.route("/index/<string:channel>", methods=['GET','POST'])
 @login_required
@@ -72,25 +82,27 @@ def add_channel():
     print(channel)
     return redirect(channel)
 
+@app.route("/clear")
+@login_required
+def clear():
+    global channels
+    channels = {"Default":[]}
+    session['channel'] = "Default"
+    return redirect(f"/index/{session['channel']}")
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/")
 
-def messageReceived(methods=['GET', 'POST']):
-    print('message was received!!!')
-
-@socketio.on('my event')
-def handle_my_custom_event(json, methods=['GET', 'POST']):
-    print('received my event: ' + str(json))
-    socketio.emit('my response', { "username": session["username"], "message": json["message"] }, callback=messageReceived)
-
 @socketio.on('new message')
 def handle_my_custom_event(json, methods=['GET', 'POST']):
     global channels
     msg = str(json)
-    print('received new message: ' + msg)
-    channels[session['channel']].append((session["username"],json["message"]))
+    if len(json["message"]) != 0:
+        print('received new message: ' + msg)
+        channels[session['channel']].append((session["username"],json["message"]))
+        socketio.emit('my response', { "username": session["username"], "message": json["message"] })
 
 
 

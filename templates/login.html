@@ -1,13 +1,16 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    User
+User
 {% endblock %}
 
 {% block body %}
-  <h1> Input your name to login </h1>
-  <form action="{{ url_for('login') }}" method="POST">
-      <input type="text" name="username" placeholder="Enter username">
-      <button>Login</button>
-  </form>
+<h1> Input your name to login</h1>
+{% if Name_too_short %}
+<p style="color: lightcoral;"> <b>Sorry, the username is too short</b></p>
+{% endif %}
+<form action="{{ url_for('login') }}" method="POST">
+  <input type="text" name="username" placeholder="Enter username">
+  <button>Login</button>
+</form>
 {% endblock %}

@@ -4,9 +4,6 @@ socket.on('connect', function () {
     var form = $('form.new_message').on('submit', function (e) {
         e.preventDefault()
         let user_input = $('input.message').val()
-        socket.emit('my event', {
-            message: user_input
-        })
         socket.emit('new message', {
             message: user_input
         })
